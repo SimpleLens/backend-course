@@ -18,30 +18,22 @@ hotels = [
 def get_hotels(
         title: str | None = Query(default=None),
         name: str | None = Query(default=None),
-        page: int = Query(default=0),
-        per_page: int = Query(default=1)
+        page: int | None = Query(default=None),
+        per_page: int | None = Query(default=None)
 ):
-    start_with = page*hotels_per_page-hotels_per_page if page != 0 else 0
-    end_with = per_page*hotels_per_page
-    
+
     return_hotels = []
-
-    
-    for i in range(start_with,end_with):
-        try:
-            return_hotels.append(hotels[i])
-        except IndexError:
-            break
-
-    return return_hotels
 
     for hotel in hotels:
         if title and hotel['title'] != title:
             continue
         if name and hotel['name'] != name:
             continue
-        return_hotels.append(hotel)
-    
+    return_hotels.append(hotel)
+
+    if page and per_page:
+        return return_hotels[(page-1)*per_page:][:per_page]
+
     return return_hotels
 
 
