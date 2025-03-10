@@ -1,8 +1,9 @@
-from fastapi import Query, Body, APIRouter
+from fastapi import Query, Body, APIRouter, Depends
 from schemas.hotels import Hotel, HotelPATCH
+from src.dependencies import pagination_dep
+from typing import Annotated
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
-hotels_per_page = 2
 
 hotels = [
     {'id': 1,'title':'dubai','name':'дубай'},
@@ -14,15 +15,15 @@ hotels = [
     {"id": 7, "title": "Санкт-Петербург", "name": "spb"}
     ]
 
+
 @router.get('')
 def get_hotels(
+        pagination: pagination_dep,
         title: str | None = Query(default=None),
-        name: str | None = Query(default=None),
-        page: int | None = Query(default=None),
-        per_page: int | None = Query(default=None)
+        name: str | None = Query(default=None)
 ):
 
-    return_hotels = []
+    return_hotels = []  
 
     for hotel in hotels:
         if title and hotel['title'] != title:
@@ -31,9 +32,9 @@ def get_hotels(
             continue
         return_hotels.append(hotel)
 
-    if page and per_page:
+    if pagination.page and pagination.per_page:
         pagination_hotels = []
-        for i in range((page-1)*per_page, per_page*page):
+        for i in range((pagination.page-1)*pagination.per_page, pagination.per_page*pagination.page):
             pagination_hotels.append(return_hotels[i])
         return pagination_hotels
 
