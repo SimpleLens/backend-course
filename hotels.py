@@ -29,10 +29,13 @@ def get_hotels(
             continue
         if name and hotel['name'] != name:
             continue
-    return_hotels.append(hotel)
+        return_hotels.append(hotel)
 
     if page and per_page:
-        return return_hotels[(page-1)*per_page:][:per_page]
+        pagination_hotels = []
+        for i in range((page-1)*per_page, per_page*page):
+            pagination_hotels.append(return_hotels[i])
+        return pagination_hotels
 
     return return_hotels
 
