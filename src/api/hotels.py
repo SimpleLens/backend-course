@@ -1,7 +1,13 @@
 from fastapi import Query, Body, APIRouter, Depends
 from schemas.hotels import Hotel, HotelPATCH
-from src.api.dependencies import pagination_dep
 from typing import Annotated
+from sqlalchemy import insert, select
+
+from src.api.dependencies import pagination_dep
+from src.database import async_session_maker
+from src.models.hotels import HotelsOrm
+from src.schemas.hotels import Hotel
+
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
@@ -17,7 +23,7 @@ hotels = [
 
 
 @router.get('')
-def get_hotels(
+async def get_hotels(
         pagination: pagination_dep,
         title: str | None = Query(default=None),
         name: str | None = Query(default=None)
@@ -25,12 +31,10 @@ def get_hotels(
 
     return_hotels = []  
 
-    for hotel in hotels:
-        if title and hotel['title'] != title:
-            continue
-        if name and hotel['name'] != name:
-            continue
-        return_hotels.append(hotel)
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        result = await session.execute(query)
+        return result.scalars().all()
 
     if pagination.page and pagination.per_page:
         pagination_hotels = []
@@ -42,20 +46,19 @@ def get_hotels(
 
 
 @router.post('')
-def add_hotel(hotel: Hotel = Body(openapi_examples={
+async def add_hotel(hotel: Hotel = Body(openapi_examples={
     '1': {'summary': 'Сочи', 'value':{
-        'title': 'Sochi', 'name': 'Сочи'
+        'title': 'Sochi', 'location': 'Сочи'
     }},
         '2': {'summary': 'Дубай', 'value':{
-        'title': 'Dubai', 'name': 'Дубай'
+        'title': 'Dubai', 'location': 'Дубай'
     }}
 })):
-    global hotels
-
-    hotels.append({'id': hotels[-1]['id']+1,
-                   'title': hotel.title,
-                   'name': hotel.name
-    })
+ 
+    async with async_session_maker() as session:
+        add_hotel_stmt = insert(HotelsOrm).values(**hotel.model_dump())
+        await session.execute(add_hotel_stmt)
+        await session.commit()
 
     return {'status':'OK'}
 
