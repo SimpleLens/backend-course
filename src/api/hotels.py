@@ -11,36 +11,33 @@ from src.schemas.hotels import Hotel
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
-hotels = [
-    {'id': 1,'title':'dubai','name':'дубай'},
-    {'id': 2,'title':'sochi','name':'сочи'},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"}
-    ]
-
 
 @router.get('')
 async def get_hotels(
         pagination: pagination_dep,
         title: str | None = Query(default=None),
-        name: str | None = Query(default=None)
+        location: str | None = Query(default=None)
 ):
 
     return_hotels = []  
+    per_page = pagination.per_page or 5
 
     async with async_session_maker() as session:
         query = select(HotelsOrm)
+
+        if title:
+            query = query.filter(HotelsOrm.title.contains(title))
+        if location :
+            query = query.filter(HotelsOrm.location.contains(location))
+
+        query = (
+            query
+            .limit(per_page)
+            .offset((pagination.page-1)*per_page)
+        )
+
         result = await session.execute(query)
         return result.scalars().all()
-
-    if pagination.page and pagination.per_page:
-        pagination_hotels = []
-        for i in range((pagination.page-1)*pagination.per_page, pagination.per_page*pagination.page):
-            pagination_hotels.append(return_hotels[i])
-        return pagination_hotels
 
     return return_hotels
 
