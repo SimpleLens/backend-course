@@ -16,9 +16,9 @@ class HotelsRepository(BaseRepository):
         query = select(HotelsOrm)
 
         if title:
-            query = query.filter(func.lower(HotelsOrm.title).like(f"%{title.lower()}%"))
+            query = query.filter(func.lower(HotelsOrm.title).contains(title.lower()))
         if location :
-            query = query.filter(func.lower(HotelsOrm.location).like(f"%{location.lower()}%"))
+            query = query.filter(func.lower(HotelsOrm.location).contains(location.lower()))
 
         query = (
             query
@@ -28,16 +28,4 @@ class HotelsRepository(BaseRepository):
 
         result = await self.session.execute(query)
         return result.scalars().all()
-    
-
-    async def get_one_or_none(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
-        result = await self.session.execute(query)
-        return result.scalars().one_or_none()
-    
-    async def add(self, data: Hotel):
-        stmt = insert(HotelsOrm).values(**data.model_dump()).returning(HotelsOrm)
-        result = await self.session.execute(stmt)
-        hotel_returned = result.scalars().first()
-        return {'id':hotel_returned.id, 'title': hotel_returned.title, 'location': hotel_returned.location}
     
