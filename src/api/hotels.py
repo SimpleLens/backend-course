@@ -1,12 +1,13 @@
 from fastapi import Query, Body, APIRouter, Depends
 from schemas.hotels import Hotel, HotelPATCH
 from typing import Annotated
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, func
 
 from src.api.dependencies import pagination_dep
 from src.database import async_session_maker
 from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel
+from src.repositories.hotels import HotelsRepository
 
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
@@ -18,27 +19,15 @@ async def get_hotels(
         title: str | None = Query(default=None),
         location: str | None = Query(default=None)
 ):
-
-    return_hotels = []  
     per_page = pagination.per_page or 5
 
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-
-        if title:
-            query = query.filter(HotelsOrm.title.contains(title))
-        if location :
-            query = query.filter(HotelsOrm.location.contains(location))
-
-        query = (
-            query
-            .limit(per_page)
-            .offset((pagination.page-1)*per_page)
-        )
-
-        result = await session.execute(query)
-        return result.scalars().all()
-
+        return await HotelsRepository(session).get_all(
+            title=title,
+            location=location,
+            limit=per_page,
+            offset=(pagination.page-1)*per_page)
+    
     return return_hotels
 
 
@@ -53,16 +42,15 @@ async def add_hotel(hotel: Hotel = Body(openapi_examples={
 })):
  
     async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelsOrm).values(**hotel.model_dump())
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelsRepository(session).add(hotel)
         await session.commit()
 
-    return {'status':'OK'}
+    return {'status':'OK', 'return': hotel}
 
 
 @router.delete('/{hotel_id}')
 def delete_hotel(
-        hotel_id: int
+        hotel_id: int   
 ):
     global hotels
     
@@ -73,8 +61,8 @@ def delete_hotel(
 
 @router.put("/{hotel_id}")
 def put_hotel(
-    hotel_id: int,
-    hotel: Hotel
+        hotel_id: int,
+        hotel: Hotel
 ):
     global hotels
 
@@ -84,12 +72,12 @@ def put_hotel(
 
 
 @router.patch("/{hotel_id}",
-    summary='Частичное изменение отеля',
-    description='Частичное изменение отеля, можно указать любой из параметров'
+        summary='Частичное изменение отеля',
+        description='Частичное изменение отеля, можно указать любой из параметров'
 )
 def patch_hotel(
-    hotel_id: int,
-    hotel_data: HotelPATCH
+        hotel_id: int,
+        hotel_data: HotelPATCH
 ):
     global hotels
 
