@@ -11,23 +11,30 @@ from src.repositories.hotels import HotelsRepository
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 
-@router.get('')
-async def get_hotels(
-        pagination: pagination_dep,
-        title: str | None = Query(default=None),
-        location: str | None = Query(default=None)
-):
-    per_page = pagination.per_page or 5
+# @router.get('')
+# async def get_hotels(
+#         pagination: pagination_dep,
+#         title: str | None = Query(default=None),
+#         location: str | None = Query(default=None)
+# ):
+#     per_page = pagination.per_page or 5
 
-    async with async_session_maker() as session:
-        return await HotelsRepository(session).get_all(
-            title=title,
-            location=location,
-            limit=per_page,
-            offset=(pagination.page-1)*per_page)
+#     async with async_session_maker() as session:
+#         return await HotelsRepository(session).get_all(
+#             title=title,
+#             location=location,
+#             limit=per_page,
+#             offset=(pagination.page-1)*per_page)
     
-    return return_hotels
+#     return return_hotels
 
+@router.get('/{hotel_id}')
+async def get_hotel(
+    hotel_id: int
+):
+    async with async_session_maker() as session:
+        result = await HotelsRepository(session).get_one(hotel_id)
+    return result
 
 @router.post('')
 async def add_hotel(hotel_data: Hotel = Body(openapi_examples={
