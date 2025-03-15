@@ -4,40 +4,38 @@ from typing import Annotated
 
 from src.api.dependencies import pagination_dep
 from src.database import async_session_maker
-from src.schemas.hotels import Hotel
+from src.schemas.hotels import Hotel, HotelAdd
 from src.repositories.hotels import HotelsRepository
 
 
 router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 
-# @router.get('')
-# async def get_hotels(
-#         pagination: pagination_dep,
-#         title: str | None = Query(default=None),
-#         location: str | None = Query(default=None)
-# ):
-#     per_page = pagination.per_page or 5
+@router.get('', summary='получение отелей с фильтрацией и пагинацией')
+async def get_hotels(
+        pagination: pagination_dep,
+        title: str | None = Query(default=None),
+        location: str | None = Query(default=None)
+):
+    per_page = pagination.per_page or 5
 
-#     async with async_session_maker() as session:
-#         return await HotelsRepository(session).get_all(
-#             title=title,
-#             location=location,
-#             limit=per_page,
-#             offset=(pagination.page-1)*per_page)
-    
-#     return return_hotels
+    async with async_session_maker() as session:
+        return await HotelsRepository(session).get_all(
+            title=title,
+            location=location,
+            limit=per_page,
+            offset=(pagination.page-1)*per_page)
 
-@router.get('/{hotel_id}')
+@router.get('/{hotel_id}', summary='Получить конкретный отель по id')
 async def get_hotel(
     hotel_id: int
 ):
     async with async_session_maker() as session:
-        result = await HotelsRepository(session).get_one(hotel_id)
+        result = await HotelsRepository(session).get_one(id = hotel_id)
     return result
 
 @router.post('')
-async def add_hotel(hotel_data: Hotel = Body(openapi_examples={
+async def add_hotel(hotel_data: HotelAdd = Body(openapi_examples={
     '1': {'summary': 'Сочи', 'value':{
         'title': 'Sochi', 'location': 'Сочи'
     }},
@@ -67,7 +65,7 @@ async def delete_hotel(
 @router.put("/{hotel_id}")
 async def put_hotel(
         hotel_id: int,
-        hotel: Hotel
+        hotel: HotelAdd
 ):
     async with async_session_maker() as session:
         result = await HotelsRepository(session).edit(hotel,id = hotel_id)
@@ -80,13 +78,14 @@ async def put_hotel(
         summary='Частичное изменение отеля',
         description='Частичное изменение отеля, можно указать любой из параметров'
 )
-def patch_hotel(
+async def patch_hotel(
         hotel_id: int,
         hotel_data: HotelPATCH
 ):
-    global hotels
 
-    hotels[hotel_id-1] = {'id': hotel_id, 'title': hotel_data.title if hotel_data.title else hotels[hotel_id-1]['title'], 'name': hotel_data.name if hotel_data.name else hotels[hotel_id-1]['name']}
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(exclude_unset=True, data=hotel_data, id=hotel_id)
+        await session.commit() 
 
     return {'status':'OK'}
 

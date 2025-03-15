@@ -6,6 +6,7 @@ from src.schemas.hotels import Hotel
 
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
+    schema = Hotel
 
 
     def __init__(self, session):
@@ -17,7 +18,7 @@ class HotelsRepository(BaseRepository):
 
         if title:
             query = query.filter(func.lower(HotelsOrm.title).contains(title.lower()))
-        if location :
+        if location:
             query = query.filter(func.lower(HotelsOrm.location).contains(location.lower()))
 
         query = (
@@ -27,5 +28,5 @@ class HotelsRepository(BaseRepository):
         )
 
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return [self.schema.model_validate(model) for model in result.scalars().all()]
     
