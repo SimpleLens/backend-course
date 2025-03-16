@@ -22,3 +22,10 @@ class UserAdd(BaseModel):
     first_name: str | None = Field(None, max_lenght=100)
     last_name: str | None = Field(None,max_lenght=100)
     username: str | None = Field(None, max_lenght=30)
+
+class UserLoginForRequest(BaseModel):
+    email: str = Field(max_lenght=200)
+    password: str = Field(max_lenght=200)
+
+class UserLogin(User):
+    hashed_password: str = Field(max_lenght=200)

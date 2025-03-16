@@ -10,8 +10,9 @@ from src.api.hotels import router as hotels_router
 from src.api.auth import router as auth_router
 
 app = FastAPI()
-app.include_router(hotels_router)
+
 app.include_router(auth_router)
+app.include_router(hotels_router)
 
 
 if __name__ == '__main__':

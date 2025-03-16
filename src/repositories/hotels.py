@@ -9,10 +9,6 @@ class HotelsRepository(BaseRepository):
     schema = Hotel
 
 
-    def __init__(self, session):
-        self.session = session
-
-
     async def get_all(self, title, location, limit, offset):
         query = select(HotelsOrm)
 
