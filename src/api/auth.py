@@ -4,6 +4,7 @@ from src.schemas.users import UserAddForRequest, UserAdd, UserLoginForRequest
 from repositories.users import UserRepository
 from src.database import async_session_maker
 from src.services.auth import AuthService
+from src.api.dependencies import UserIdDep
 
 router = APIRouter(prefix='/auth', tags=["Аутентификация, аутентификация и регистрация"])
 
@@ -13,10 +14,12 @@ async def registration_user(
         user_data: UserAddForRequest
 ):
     hashed_passsword = AuthService().get_hashed_password(user_data.password)
-    user_data_to_register = UserAdd(hashed_password=hashed_passsword, **user_data.model_dump())
+    user_data_to_register = UserAdd(hashed_password=hashed_passsword, **user_data.model_dump(exclude="password"))
     async with async_session_maker() as session:
-        await UserRepository(session).add(user_data_to_register)
+        added_user = await UserRepository(session).add(user_data_to_register)
         await session.commit()
+    
+    return {"status":"OK", "user":added_user}
 
 
 @router.post("/login")
@@ -29,19 +32,28 @@ async def login(
 
     if not user: 
         raise HTTPException(status_code=401, detail="Пользователя не существует")
-    if not AuthService().verify_password(user_data.password,user.hashed_password):
-         raise HTTPException(status_code=401, detail="Неверный пароль")
+    
+    if not AuthService().verify_password(user_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Неверный пароль")
 
-    access_token = AuthService().create_access_token({"id":user.id})
+    access_token = AuthService().encode_jwt_token({"user_id":user.id, "email":user.email})
 
     response.set_cookie("access_token", access_token)
 
-    return {"access_token": access_token}
+    return {"access_token": access_token, "user": user}
 
 
-@router.get("/only_auth")
-async def only_auth(
-        request: Request
+@router.get("/me")
+async def get_me(
+        UserIdDep: UserIdDep
 ):
-    access_token = request.cookies.get('access_token')
-    print(access_token)
+    async with async_session_maker() as session:
+        user_data = await UserRepository(session).get_one_or_none(id = UserIdDep)
+    return user_data
+
+@router.post("/logout")
+async def logout(
+    response: Response
+):
+    response.delete_cookie("access_token")
+    return {"status": "OK"}
