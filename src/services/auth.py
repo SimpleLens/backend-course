@@ -22,6 +22,7 @@ class AuthService:
         except jwt.exceptions.DecodeError:
             raise HTTPException(411,detail="Невалидный токен аутентификации")
 
+
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
     

@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from src.database import Base
 from src.models.hotels import HotelsOrm
-from src.models.rooms import RoomsOrm 
+from src.models.rooms import RoomsModel 
 from src.models.users import UsersOrm
 from src.config import settings
 

@@ -1,6 +1,8 @@
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import NoResultFound
 from pydantic import BaseModel
+from fastapi import HTTPException
+
 
 class BaseRepository():
     model = None
@@ -12,7 +14,12 @@ class BaseRepository():
 
     async def get_all(self, *args, **kwargs):
         query = select(self.model)
+
+        if kwargs:
+            query = query.filter_by(**kwargs)
+
         result = await self.session.execute(query)
+        
         return [self.schema.model_validate(model) for model in result.scalars().all()]
 
 
@@ -28,7 +35,7 @@ class BaseRepository():
             result = await self.session.execute(query)
             return self.schema.model_validate(result.scalars().one())
         except NoResultFound:
-            return {'status':'404'}
+            raise HTTPException(404, detail="Не найдено ни одной сущности")
 
 
     async def add(self, data: BaseModel):
@@ -43,9 +50,7 @@ class BaseRepository():
         number_of_hotels = len(result.all())
 
         if number_of_hotels == 0:
-            return {'status':'404'}
-        if number_of_hotels > 1:
-            return {'status':'400'}
+            raise HTTPException(404, detail="Не найдено ни одной сущности")
 
         edit_data_stmt = update(self.model).values(**data.model_dump(exclude_unset=exclude_unset)).filter_by(**filter_by)
         await self.session.execute(edit_data_stmt)
@@ -58,9 +63,7 @@ class BaseRepository():
         number_of_hotels = len(result.all())
 
         if number_of_hotels == 0:
-            return {'status':'404'}
-        if number_of_hotels > 1:
-            return {'status':'400'}
+            raise HTTPException(404, detail="Не найдено ни одной сущности")
         
         delete_data_stmt = delete(self.model).filter_by(**filter_by)
         await self.session.execute(delete_data_stmt)
