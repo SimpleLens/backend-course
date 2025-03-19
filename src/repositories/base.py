@@ -12,30 +12,39 @@ class BaseRepository():
         self.session = session
 
 
-    async def get_all(self, *args, **kwargs):
+    async def get_all(self, *args, **filter_by):
         query = select(self.model)
 
-        if kwargs:
-            query = query.filter_by(**kwargs)
+        if filter_by:
+            query = query.filter_by(**filter_by)
 
         result = await self.session.execute(query)
-        
-        return [self.schema.model_validate(model) for model in result.scalars().all()]
+        result_after = result.scalars().one_or_none()
+
+        if result_after:
+            return [self.schema.model_validate(model) for model in result.scalars().all()]
+        else: 
+            return None
 
 
     async def get_one_or_none(self,**filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return self.schema.model_validate(result.scalars().one_or_none())
+        result_after = result.scalars().one_or_none()
+        if result_after:
+            return self.schema.model_validate(result_after)
+        else: 
+            return None
     
 
     async def get_one(self, **filter_by):
-        try:
-            query = select(self.model).filter_by(**filter_by)
-            result = await self.session.execute(query)
-            return self.schema.model_validate(result.scalars().one())
-        except NoResultFound:
-            raise HTTPException(404, detail="Не найдено ни одной сущности")
+        query = select(self.model).filter_by(**filter_by)
+        result = await self.session.execute(query)
+        result_after = result.scalars().one_or_none()
+        if result_after:
+            return self.schema.model_validate(result_after)
+        else: 
+            return None
 
 
     async def add(self, data: BaseModel):

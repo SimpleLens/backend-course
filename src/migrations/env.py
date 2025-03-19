@@ -7,6 +7,7 @@ from src.database import Base
 from src.models.hotels import HotelsOrm
 from src.models.rooms import RoomsModel 
 from src.models.users import UsersOrm
+from src.models.bookings import BookingsModel
 from src.config import settings
 
 from alembic import context

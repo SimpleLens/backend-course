@@ -1,34 +1,33 @@
-from fastapi import APIRouter, HTTPException, Response, Request
+from fastapi import APIRouter, HTTPException, Response
 
 from src.schemas.users import UserAddForRequest, UserAdd, UserLoginForRequest
-from repositories.users import UserRepository
-from src.database import async_session_maker
 from src.services.auth import AuthService
-from src.api.dependencies import UserIdDep
+from src.api.dependencies import UserIdDep, DbDep
 
 router = APIRouter(prefix='/auth', tags=["Аутентификация, аутентификация и регистрация"])
 
 
 @router.post("/register")
 async def registration_user(
+        Db: DbDep,
         user_data: UserAddForRequest
 ):
     hashed_passsword = AuthService().get_hashed_password(user_data.password)
     user_data_to_register = UserAdd(hashed_password=hashed_passsword, **user_data.model_dump(exclude="password"))
-    async with async_session_maker() as session:
-        added_user = await UserRepository(session).add(user_data_to_register)
-        await session.commit()
+
+    added_user = await Db.users.add(user_data_to_register)
+    await Db.commit()
     
     return {"status":"OK", "user":added_user}
 
 
 @router.post("/login")
 async def login(
-    user_data: UserLoginForRequest,
-    response: Response
+        Db: DbDep,
+        user_data: UserLoginForRequest,
+        response: Response
 ):
-    async with async_session_maker() as session:
-        user = await UserRepository(session).get_user_with_hashed_password(user_data.email)
+    user = await Db.users.get_user_with_hashed_password(user_data.email)
 
     if not user: 
         raise HTTPException(status_code=401, detail="Пользователя не существует")
@@ -45,10 +44,10 @@ async def login(
 
 @router.get("/me")
 async def get_me(
+        Db: DbDep,
         UserIdDep: UserIdDep
 ):
-    async with async_session_maker() as session:
-        user_data = await UserRepository(session).get_one_or_none(id = UserIdDep)
+    user_data = await Db.users.get_one_or_none(id = UserIdDep)
     return user_data
 
 @router.post("/logout")
