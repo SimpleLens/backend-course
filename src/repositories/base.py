@@ -19,10 +19,10 @@ class BaseRepository():
             query = query.filter_by(**filter_by)
 
         result = await self.session.execute(query)
-        result_after = result.scalars().one_or_none()
+        result_after = result.scalars().all()
 
         if result_after:
-            return [self.schema.model_validate(model) for model in result.scalars().all()]
+            return [self.schema.model_validate(model) for model in result_after]
         else: 
             return None
 
@@ -40,7 +40,7 @@ class BaseRepository():
     async def get_one(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        result_after = result.scalars().one_or_none()
+        result_after = result.scalars().one()
         if result_after:
             return self.schema.model_validate(result_after)
         else: 

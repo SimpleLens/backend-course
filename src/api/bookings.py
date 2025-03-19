@@ -26,5 +26,23 @@ async def add_booking(
     await Db.commit()
 
     return {"status":"OK", "booking": added_booking}
+
+
+@router.get("", summary="Получить все бронирования")
+async def get_all_bookings(
+        Db: DbDep
+):
+    all_bookings = await Db.bookings.get_all()
+
+    return all_bookings
+
+@router.get("/me", summary="Получить бронирования аутентифицированного пользователя")
+async def get_my_bookings(
+    Db: DbDep,
+    user_id: UserIdDep
+):
+    user_bookings = await Db.bookings.get_all(user_id = user_id)
+
+    return user_bookings
     
 

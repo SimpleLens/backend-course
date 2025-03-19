@@ -20,7 +20,10 @@ class AuthService:
         try:
             return jwt.decode(token, settings.JWT_SECRET_KEY, settings.JWT_ALGORITHM)
         except jwt.exceptions.DecodeError:
-            raise HTTPException(411,detail="Невалидный токен аутентификации")
+            raise HTTPException(411, detail="Невалидный токен аутентификации")
+        except jwt.exceptions.ExpiredSignatureError:
+             raise HTTPException(411, detail="Истекший токен аутентификации")
+           
 
 
     def verify_password(self, plain_password, hashed_password):
