@@ -62,6 +62,11 @@ class BaseRepository():
         return self.schema.model_validate(returned_result.scalars().one())
 
 
+    async def add_bulk(self, data: list[BaseModel]):
+        add_data_stmt = insert(self.model).values([i.model_dump() for i in data])
+        await self.session.execute(add_data_stmt)
+
+
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
         query_to_check = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query_to_check)
@@ -86,3 +91,16 @@ class BaseRepository():
         delete_data_stmt = delete(self.model).filter_by(**filter_by)
         await self.session.execute(delete_data_stmt)
         return {'status':'OK'}
+
+    async def delete_bulk(self, data: list):
+        query_to_check = select(self.model).filter(self.model.id.in_(data))
+        result = await self.session.execute(query_to_check)
+        number_of_hotels = len(result.all())
+
+        if number_of_hotels == 0:
+            raise HTTPException(404, detail="Не найдено ни одной сущности")
+        
+        delete_data_stmt = delete(self.model).filter(self.model.id.in_(data))
+        await self.session.execute(delete_data_stmt)
+        return {'status':'OK'}
+

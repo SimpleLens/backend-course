@@ -2,8 +2,9 @@ from datetime import date
 
 from fastapi import APIRouter, Body
 
-from src.schemas.rooms import RoomAdd, RoomAddForRequest, RoomPut, RoomPatch
+from src.schemas.rooms import RoomAdd, RoomAddForRequest, RoomPut, RoomPatch, RoomPatchRequest
 from src.api.dependencies import DbDep
+from src.schemas.facilities import AddRoomFacility
 
 router = APIRouter(prefix="/hotels", tags=["Комнаты"])
 
@@ -14,16 +15,20 @@ async def add_room(
         hotel_id: int,
         room_data: RoomAddForRequest = Body(openapi_examples={
             "1": {"summary":"Крутой номер","value":{
-                "hotel_id": 5,
                 "title": "Очень крутой номер",
                 "price": 1000,
                 "description": ".",
-                "quantity": 10
+                "quantity": 10,
+                "facilities_ids": [2,3]
             }}
         })
 ):
-    data_to_add = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
+    data_to_add = RoomAdd(hotel_id=hotel_id, **room_data.model_dump(exclude="facilities_ids"))
     added_room = await Db.rooms.add(data_to_add)
+
+    facilities_to_add = [AddRoomFacility(room_id=added_room.id, facility_id=i) for i in room_data.facilities_ids]
+    await Db.rooms_facilities.add_bulk(facilities_to_add)
+
     await Db.commit()
 
     return {"status": "OK", "room": added_room}
@@ -70,9 +75,33 @@ async def particially_edit_rooms(
         Db: DbDep,
         hotel_id: int,
         room_id: int,
-        room_data: RoomPatch
+        room_data: RoomPatchRequest
 ):
-    await Db.rooms.edit(room_data, exclude_unset=True, hotel_id=hotel_id, id=room_id)
+    facilities = await Db.rooms_facilities.get_filtered(room_id = room_id)
+    existing_facilities = [i.facility_id for i in facilities]
+    ids_of_facil = [i.id for i in facilities]
+    facilities_from_request = room_data.facilities_ids
+    facilities_to_delete = []
+    #1234
+    #235
+    for i in existing_facilities:
+        if i in facilities_from_request:
+            facilities_from_request.remove(i)
+            continue
+
+        facilities_to_delete.append(ids_of_facil[existing_facilities.index(i)])
+
+    facilities_to_add = [AddRoomFacility(facility_id=i, room_id=room_id) for i in facilities_from_request]
+    
+    if facilities_to_add:
+        await Db.rooms_facilities.add_bulk(facilities_to_add)
+    
+    if facilities_to_delete:
+        await Db.rooms_facilities.delete_bulk(facilities_to_delete)
+
+    room_data_to_update = RoomPatch(**room_data.model_dump(exclude="facilities_ids"))
+
+    await Db.rooms.edit(room_data_to_update, exclude_unset=True, hotel_id=hotel_id, id=room_id)
     await Db.commit()
 
     return {"status": "OK"}
