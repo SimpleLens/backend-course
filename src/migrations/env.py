@@ -8,7 +8,9 @@ from src.models.hotels import HotelsOrm
 from src.models.rooms import RoomsModel 
 from src.models.users import UsersOrm
 from src.models.bookings import BookingsModel
+from src.models.facilities import FacilitiesModel
 from src.config import settings
+
 
 from alembic import context
 

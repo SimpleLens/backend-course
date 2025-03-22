@@ -20,6 +20,6 @@ class RoomsRepository(BaseRepository):
             date_to: date
     ):
 
-        rooms = await self.get_filtered(RoomsModel.id.in_(rooms_ids_to_get(hotel_id, date_to, date_from)))
+        rooms = await self.get_filtered(RoomsModel.id.in_(rooms_ids_to_get(hotel_id=hotel_id, date_to=date_to, date_from=date_from)))
 
         return rooms

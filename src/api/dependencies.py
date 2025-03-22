@@ -7,7 +7,7 @@ from src.utils.db_manager import DBManager
 from src.database import async_session_maker
 
 class Pagination(BaseModel):
-    page: int  = Field(default=1,ge=1)
+    page: int = Field(default=1,ge=1)
     per_page: int | None = Field(None,le=50)
 
 pagination_dep = Annotated[Pagination, Depends()]

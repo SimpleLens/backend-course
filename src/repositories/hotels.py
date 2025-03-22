@@ -17,10 +17,10 @@ class HotelsRepository(BaseRepository):
             self,
             date_to: date,
             date_from: date,
-            location: str,
-            title: str,
             offset: int,
-            limit: int
+            limit: int,
+            location: str | None = None,
+            title: str | None = None
     ):
         available_rooms = rooms_ids_to_get(date_to=date_to, date_from=date_from)
 
@@ -31,14 +31,18 @@ class HotelsRepository(BaseRepository):
         query_to_get_hotels = (
             select(HotelsOrm)
             .select_from(HotelsOrm)
-            .filter(HotelsOrm.id.in_(hotels_to_get), HotelsOrm.title.contains(title), HotelsOrm.location.contains(location))
+            .filter(HotelsOrm.id.in_(hotels_to_get))
             .limit(limit)
             .offset(offset)
         )
+
+        if title:
+            query_to_get_hotels = query_to_get_hotels.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
+        if location:
+            query_to_get_hotels = query_to_get_hotels.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
 
         result = await self.session.execute(query_to_get_hotels)
 
         if result:
             return [Hotel.model_validate(hotel) for hotel in result.scalars().all()]
         return None
-    

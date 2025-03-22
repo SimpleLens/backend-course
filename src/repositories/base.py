@@ -16,12 +16,10 @@ class BaseRepository():
         query = select(self.model)
         if filter:
             query = (query
-                    .select(self.model)
                     .filter(*filter)
                     )
         if filter_by:
             query = (query
-                    .select(self.model)
                     .filter_by(**filter_by)
                     )
 
