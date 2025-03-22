@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Body
 
 from src.schemas.rooms import RoomAdd, RoomAddForRequest, RoomPut, RoomPatch
@@ -30,9 +32,11 @@ async def add_room(
 @router.get("/{hotel_id}/rooms", summary="Получить все номера отеля")
 async def get_rooms(
         Db: DbDep,
-        hotel_id: int
+        hotel_id: int,
+        date_from: date,
+        date_to: date
 ):
-    rooms = await Db.rooms.get_all(hotel_id = hotel_id)
+    rooms = await Db.rooms.get_filtered_by_data(hotel_id = hotel_id, date_from=date_from, date_to=date_to)
 
     return {"rooms": rooms}
 

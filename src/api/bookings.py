@@ -18,7 +18,7 @@ async def add_booking(
         raise HTTPException(404, "Комната не найдена")
     
     per_day_cost = room_data.price
-    total_cost = per_day_cost * (booking_data.date_to - booking_data.date_from).days
+    total_cost = per_day_cost * ((booking_data.date_to - booking_data.date_from).days)
 
     booking_data_to_add = BookingAdd(**booking_data.model_dump(), user_id=user_id,price=total_cost)
 
