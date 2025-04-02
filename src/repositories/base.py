@@ -3,10 +3,13 @@ from sqlalchemy.exc import NoResultFound
 from pydantic import BaseModel
 from fastapi import HTTPException
 
+from src.repositories.mappers.mappers import DataMapper
+
 
 class BaseRepository():
     model = None
     schema: BaseModel = None
+    mapper: DataMapper = None
 
     def __init__(self, session):
         self.session = session
@@ -27,7 +30,7 @@ class BaseRepository():
         result_after = result.scalars().all()
 
         if result_after:
-            return [self.schema.model_validate(model) for model in result_after]
+            return [self.mapper.map_to_domen_entity(model) for model in result_after]
         else: 
             return None    
 
@@ -39,9 +42,9 @@ class BaseRepository():
     async def get_one_or_none(self,**filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        result_after = result.scalars().one_or_none()
-        if result_after:
-            return self.schema.model_validate(result_after)
+        save_result = result.scalars().one_or_none()
+        if save_result:
+            return self.mapper.map_to_domen_entity(save_result)
         else: 
             return None
     
@@ -49,9 +52,9 @@ class BaseRepository():
     async def get_one(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        result_after = result.scalars().one()
-        if result_after:
-            return self.schema.model_validate(result_after)
+        save_result = result.scalars().one()
+        if save_result:
+            return self.mapper.map_to_domen_entity(save_result)
         else: 
             return None
 
@@ -59,7 +62,7 @@ class BaseRepository():
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         returned_result = await self.session.execute(add_data_stmt)
-        return self.schema.model_validate(returned_result.scalars().one())
+        return self.mapper.map_to_domen_entity(returned_result.scalars().one())
 
 
     async def add_bulk(self, data: list[BaseModel]):
@@ -77,7 +80,6 @@ class BaseRepository():
 
         edit_data_stmt = update(self.model).values(**data.model_dump(exclude_unset=exclude_unset)).filter_by(**filter_by)
         await self.session.execute(edit_data_stmt)
-        return {'status':'OK'}
 
 
     async def delete(self, **filter_by):
@@ -90,7 +92,6 @@ class BaseRepository():
         
         delete_data_stmt = delete(self.model).filter_by(**filter_by)
         await self.session.execute(delete_data_stmt)
-        return {'status':'OK'}
 
     async def delete_bulk(self, data: list):
         query_to_check = select(self.model).filter(self.model.id.in_(data))
@@ -102,5 +103,4 @@ class BaseRepository():
         
         delete_data_stmt = delete(self.model).filter(self.model.id.in_(data))
         await self.session.execute(delete_data_stmt)
-        return {'status':'OK'}
 

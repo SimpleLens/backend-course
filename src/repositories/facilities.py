@@ -4,14 +4,16 @@ from sqlalchemy import select, insert, delete
 from src.repositories.base import BaseRepository
 from src.schemas.facilities import Facility, RoomFacility
 from src.models.facilities import FacilitiesModel, RoomsFacilitiesModel
+from src.repositories.mappers.mappers import FacilityDataMapper, RoomFacilityDataMapper
+
 
 class FacilitiesRepository(BaseRepository):
-    schema = Facility
     model = FacilitiesModel
+    mapper = FacilityDataMapper
 
 class RoomsFacilitiesRepository(BaseRepository):
-    schema = RoomFacility
     model = RoomsFacilitiesModel
+    schema = RoomFacilityDataMapper
 
     async def set_facilities(
             self,
@@ -28,9 +30,6 @@ class RoomsFacilitiesRepository(BaseRepository):
         
         facilities_to_delete = list(set(current_facilities) - set(facilities_ids))
         facilities_to_add = list(set(facilities_ids) - set(current_facilities))
-
-        print(facilities_to_add)
-        print(current_facilities)
 
         if facilities_to_delete:
             stmt_facilities_delete = (

@@ -4,11 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from src.database import Base
-from src.models.hotels import HotelsOrm
-from src.models.rooms import RoomsModel 
-from src.models.users import UsersOrm
-from src.models.bookings import BookingsModel
-from src.models.facilities import FacilitiesModel
+from src.models import *
 from src.config import settings
 
 

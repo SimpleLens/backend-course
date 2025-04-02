@@ -12,7 +12,7 @@ async def add_booking(
         user_id: UserIdDep,
         booking_data: BookingAddRequest
 ): 
-    room_data = await Db.rooms.get_one_or_none(id = booking_data.room_id)
+    room_data = await Db.rooms.get_one_or_none(room_id = booking_data.room_id)
 
     if not room_data:
         raise HTTPException(404, "Комната не найдена")

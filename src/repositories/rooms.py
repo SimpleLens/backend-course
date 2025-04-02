@@ -8,12 +8,13 @@ from src.models.rooms import RoomsModel
 from src.models.bookings import BookingsModel
 from src.repositories.base import BaseRepository
 from src.database import engine
-from src.repositories.facilities import FacilitiesModel, RoomsFacilitiesModel
 from src.repositories.utils import rooms_ids_to_get
+from src.repositories.mappers.mappers import RoomDataMapper
+
 
 class RoomsRepository(BaseRepository):
     model = RoomsModel
-    schema = Room
+    mapper = RoomDataMapper
 
     async def get_filtered_by_data(
             self,
@@ -39,12 +40,11 @@ class RoomsRepository(BaseRepository):
 
     async def get_one_or_none(
             self,
-            hotel_id: int,
             room_id: int
     ):
         query = (
             select(self.model)
-            .filter(RoomsModel.id == room_id, RoomsModel.hotel_id == hotel_id)
+            .filter(RoomsModel.id == room_id)
             .options(selectinload(self.model.facilities))
         )
 

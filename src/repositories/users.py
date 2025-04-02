@@ -1,12 +1,13 @@
 from sqlalchemy import select
 
 from src.repositories.base import BaseRepository
-from src.models.users import UsersOrm
-from src.schemas.users import User, UserLogin, UserLoginForRequest
+from src.models.users import UsersModel
+from src.schemas.users import User, UserLogin
+from src.repositories.mappers.mappers import UserDataMapper
     
 class UsersRepository(BaseRepository):
-    model = UsersOrm
-    schema = User
+    model = UsersModel
+    mapper = UserDataMapper
 
     async def get_user_with_hashed_password(
         self,

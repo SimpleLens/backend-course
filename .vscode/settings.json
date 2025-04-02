@@ -1,3 +1,8 @@
 {
-    "editor.minimap.scale": 1
+    "editor.minimap.scale": 1,
+    "python.testing.pytestArgs": [
+        "src"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
