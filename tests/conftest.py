@@ -13,6 +13,14 @@ from src.models.rooms import RoomsModel
 from src.models.hotels import HotelsModel
 from src.schemas.rooms import RoomAdd
 from src.schemas.hotels import HotelAddPut
+from src.api.dependencies import getDB
+
+
+async def db_overrides():
+    async with DBManager(async_session_maker_null_pool) as db:
+        yield db
+
+app.dependency_overrides[getDB] = db_overrides
 
 
 @pytest.fixture(scope="session")

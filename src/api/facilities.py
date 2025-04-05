@@ -10,7 +10,7 @@ from src.tasks.tasks import test_task
 router = APIRouter(prefix="/facilities", tags=["Удобства"])
 
 @router.get("")
-@cache(expire=5)
+#@cache(expire=5)
 async def get_all_facilities(
         Db: DbDep,
         bgtask: BackgroundTasks

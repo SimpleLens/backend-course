@@ -6,8 +6,8 @@ from src.utils.db_manager import DBManager
 from src.database import async_session_maker_null_pool
 
 #@celery_inst.task
-def test_task(msg):
-    time.sleep(5)
+async def test_task(msg):
+    asyncio.sleep(5)
     print(msg)
 
 
