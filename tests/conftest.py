@@ -19,18 +19,33 @@ from src.schemas.hotels import HotelAddPut
 async def check_for_test():
     assert settings.MODE == "TEST"
 
+
+@pytest.fixture()
+async def db():
+    async with DBManager(async_session_maker_null_pool) as db:
+        yield db
+
+
+@pytest.fixture(scope="session")
+async def ac():
+ async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+     yield ac
+
+
 @pytest.fixture(scope="session", autouse = True)
-async def drop_create_database(check_for_test):
+async def setup_database(check_for_test):
 
     async with engine_null_pool.begin() as sesison:
         await sesison.run_sync(Base.metadata.drop_all)
         await sesison.run_sync(Base.metadata.create_all)
 
-    with open("mock_hotels.json", "r",encoding="utf-8") as file:
+    with open("tests/mock_hotels.json", "r",encoding="utf-8") as file:
         
         hotels = [HotelAddPut.model_validate(hotel) for hotel in json.load(file)]
 
-    with open("mock_rooms.json", "r",encoding="utf-8") as file:
+    with open("tests/mock_rooms.json", "r",encoding="utf-8") as file:
         rooms = [RoomAdd.model_validate(room) for room in json.load(file)]
 
     async with DBManager(async_session_maker_null_pool) as db:
@@ -40,19 +55,15 @@ async def drop_create_database(check_for_test):
         await db.commit()
 
 
-
-
 @pytest.fixture(scope="session", autouse=True)
-async def registrate_user():
-  async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        response = await ac.post(
-            "auth/register",
-            json= {
-                "email": "penisnostb@gmail.ru",
-                "password": "12345"
-            }
-            )
-        
-        assert response.status_code == 200
+async def registrate_user(ac, setup_database):
+
+    response = await ac.post(
+        "auth/register",
+        json= {
+            "email": "penisnostb@gmail.ru",
+            "password": "12345"
+        }
+        )
+    
+    assert response.status_code == 200
