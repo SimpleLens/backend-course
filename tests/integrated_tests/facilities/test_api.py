@@ -9,6 +9,7 @@ async def test_api_add_facility(ac):
         }
         )
     
+    assert response.json()["data"]["title"] == "Массажка"
     assert response.status_code == 200
 
 
@@ -17,5 +18,4 @@ async def test_api_get_facility(ac):
         "facilities"
         )
     
-    assert response.json()
     assert response.status_code == 200

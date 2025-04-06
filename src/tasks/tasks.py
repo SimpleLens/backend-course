@@ -7,7 +7,7 @@ from src.database import async_session_maker_null_pool
 
 #@celery_inst.task
 async def test_task(msg):
-    asyncio.sleep(5)
+    await asyncio.sleep(1)
     print(msg)
 
 

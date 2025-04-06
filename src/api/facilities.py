@@ -10,7 +10,7 @@ from src.tasks.tasks import test_task
 router = APIRouter(prefix="/facilities", tags=["Удобства"])
 
 @router.get("")
-#@cache(expire=5)
+@cache(expire=5)
 async def get_all_facilities(
         Db: DbDep,
         bgtask: BackgroundTasks
@@ -25,6 +25,6 @@ async def add_facility(
         Db: DbDep,
         data: FacilityAdd
 ):
-    await Db.facilities.add(data)
+    added_facility = await Db.facilities.add(data)
     await Db.commit()
-    return {"status":"OK"}
+    return {"status":"OK", "data": added_facility}
