@@ -32,7 +32,8 @@ def rooms_ids_to_get(
     query_for_hotels = (select(RoomsModel.id)
                         .select_from(RoomsModel)
                         )
-    
+
+
     if hotel_id:
         query_for_hotels = query_for_hotels.filter_by(hotel_id=hotel_id)
 

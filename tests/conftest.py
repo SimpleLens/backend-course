@@ -53,7 +53,6 @@ async def setup_database(check_for_test):
         await sesison.run_sync(Base.metadata.create_all)
 
     with open("tests/mock_hotels.json", "r",encoding="utf-8") as file:
-        
         hotels = [HotelAddPut.model_validate(hotel) for hotel in json.load(file)]
 
     with open("tests/mock_rooms.json", "r",encoding="utf-8") as file:
@@ -89,6 +88,8 @@ async def authenticated_ac(ac, registrate_user):
             "password": "12345"
         }
         )
+
+    assert ac.cookies.get("access_token")
 
     yield ac
 
