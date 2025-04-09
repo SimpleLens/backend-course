@@ -9,7 +9,7 @@ from src.schemas.bookings import Booking
 from src.models.bookings import BookingsModel
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.repositories.utils import rooms_ids_to_get
-from src.repositories.rooms import RoomsModel
+from src.schemas.bookings import BookingAdd
 
 class BookingsRepository(BaseRepository):
     model = BookingsModel
@@ -28,9 +28,10 @@ class BookingsRepository(BaseRepository):
 
     async def add_booking(
             self,
-            booking: BaseModel
+            booking: BookingAdd,
+            hotel_id: int
         ):
-        available_rooms_query = rooms_ids_to_get(date_to=booking.date_to, date_from=booking.date_from)
+        available_rooms_query = rooms_ids_to_get(date_to=booking.date_to, date_from=booking.date_from, hotel_id=hotel_id)
         
         result = await self.session.execute(available_rooms_query)
 
@@ -40,5 +41,5 @@ class BookingsRepository(BaseRepository):
             result = await self.add(booking)
             return result
         
-        raise HTTPException(400, detail="Все номера заняты")
+        raise HTTPException(500, detail="Все номера заняты")
         
