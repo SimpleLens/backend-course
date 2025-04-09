@@ -50,6 +50,7 @@ async def get_me(
     user_data = await Db.users.get_one_or_none(id = UserIdDep)
     return user_data
 
+
 @router.post("/logout")
 async def logout(
     response: Response

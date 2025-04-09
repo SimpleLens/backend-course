@@ -1,10 +1,13 @@
 import pytest
+from src.utils.db_manager import DBManager
+from src.database import async_session_maker_null_pool
 
 
-@pytest.fixture()
-async def delete_all_bookings(db):
-    await db.bookings.delete()
-    await db.commit()
+@pytest.fixture(scope="module")
+async def delete_all_bookings():
+    async with DBManager(async_session_maker_null_pool) as db_:
+        await db_.bookings.delete()
+        await db_.commit()
 
 
 @pytest.mark.parametrize("date_from, date_to, room_id, status_code", [
