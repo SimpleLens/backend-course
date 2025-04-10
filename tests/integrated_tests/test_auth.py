@@ -1,5 +1,6 @@
 from src.services.auth import AuthService
 
+
 def test_encode_jwt_token():
     data = {"user_id": "1"}
 

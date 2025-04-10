@@ -5,7 +5,8 @@ from src.tasks.celery_app import celery_inst
 from src.utils.db_manager import DBManager
 from src.database import async_session_maker_null_pool
 
-#@celery_inst.task
+
+# @celery_inst.task
 async def test_task(msg):
     await asyncio.sleep(1)
     print(msg)

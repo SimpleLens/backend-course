@@ -9,22 +9,17 @@ from src.tasks.tasks import test_task
 
 router = APIRouter(prefix="/facilities", tags=["Удобства"])
 
+
 @router.get("")
 @cache(expire=5)
-async def get_all_facilities(
-        Db: DbDep,
-        bgtask: BackgroundTasks
-):
-
+async def get_all_facilities(Db: DbDep, bgtask: BackgroundTasks):
     facilities = await Db.facilities.get_all()
-    bgtask.add_task(test_task,"прив ку")
+    bgtask.add_task(test_task, "прив ку")
     return facilities
 
+
 @router.post("")
-async def add_facility(
-        Db: DbDep,
-        data: FacilityAdd
-):
+async def add_facility(Db: DbDep, data: FacilityAdd):
     added_facility = await Db.facilities.add(data)
     await Db.commit()
-    return {"status":"OK", "data": added_facility}
+    return {"status": "OK", "data": added_facility}

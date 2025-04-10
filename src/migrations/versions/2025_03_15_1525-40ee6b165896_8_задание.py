@@ -20,10 +20,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_unique_constraint('email', "users", ["email"])
-    op.create_unique_constraint('username', "users", ["username"])
+    op.create_unique_constraint("email", "users", ["email"])
+    op.create_unique_constraint("username", "users", ["username"])
 
 
 def downgrade() -> None:
-    op.drop_constraint('email', "users", type_="unique")
-    op.drop_constraint('username', "users", type_="unique")
+    op.drop_constraint("email", "users", type_="unique")
+    op.drop_constraint("username", "users", type_="unique")

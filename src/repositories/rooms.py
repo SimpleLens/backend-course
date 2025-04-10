@@ -16,32 +16,27 @@ class RoomsRepository(BaseRepository):
     model = RoomsModel
     mapper = RoomDataMapper
 
-    async def get_filtered_by_data(
-            self,
-            hotel_id: int,
-            date_from: date,
-            date_to: date
-    ):
-
+    async def get_filtered_by_data(self, hotel_id: int, date_from: date, date_to: date):
         query = (
             select(self.model)
             .select_from(self.model)
             .filter(
-                RoomsModel.id.in_(rooms_ids_to_get(hotel_id=hotel_id, date_to=date_to, date_from=date_from))
+                RoomsModel.id.in_(
+                    rooms_ids_to_get(
+                        hotel_id=hotel_id, date_to=date_to, date_from=date_from
+                    )
                 )
-            .options(selectinload(self.model.facilities))
             )
-        
+            .options(selectinload(self.model.facilities))
+        )
+
         result = await self.session.execute(query)
 
+        return [
+            RoomWithFacilities.model_validate(room) for room in result.scalars().all()
+        ]
 
-        return [RoomWithFacilities.model_validate(room) for room in result.scalars().all()]
-    
-
-    async def get_one_or_none(
-            self,
-            room_id: int
-    ):
+    async def get_one_or_none(self, room_id: int):
         query = (
             select(self.model)
             .filter(RoomsModel.id == room_id)
@@ -51,27 +46,6 @@ class RoomsRepository(BaseRepository):
         result = await self.session.execute(query)
 
         return RoomWithFacilities.model_validate(result.scalars().one_or_none())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     # async def get_filtered_by_data( ### Мое решение задачи с выводом удобств номеров с использованием одного sql запроса (считаю что очень хорошо справился с заданием)
     #         self,
@@ -98,7 +72,7 @@ class RoomsRepository(BaseRepository):
     #     for i in rooms_with_facilities:
     #         if i[0].id not in custom_model_rooms_dict:
     #             custom_model_rooms_dict[i[0].id] = {"id": i[0].id, "hotel_id":i[0].hotel_id, "title":i[0].title, "price":i[0].price, "description":i[0].description, "quantity": i[0].quantity, "facilities":[]}
-        
+
     #     for i in rooms_with_facilities:
     #         custom_model_rooms_dict[i[0].id]["facilities"].append(i[1])
 

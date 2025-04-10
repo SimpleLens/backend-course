@@ -1,4 +1,4 @@
-import sys 
+import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -18,12 +18,14 @@ from src.api.images import router as images_router
 
 from src.init import redis_manager
 
+
 @asynccontextmanager
-async def lifespan(app = FastAPI):
+async def lifespan(app=FastAPI):
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager), prefix="fastapi-cache")
     yield
     await redis_manager.close()
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -35,5 +37,5 @@ app.include_router(facilities_router)
 app.include_router(images_router)
 
 
-if __name__ == '__main__':
-    uvicorn.run(app='main:app', reload=True)
+if __name__ == "__main__":
+    uvicorn.run(app="main:app", reload=True)

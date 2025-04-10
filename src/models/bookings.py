@@ -7,6 +7,7 @@ from sqlalchemy.sql import func
 
 from src.database import Base
 
+
 class BookingsModel(Base):
     __tablename__ = "bookings"
 
@@ -15,9 +16,9 @@ class BookingsModel(Base):
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     date_from: Mapped[date]
-    date_to: Mapped[date] 
+    date_to: Mapped[date]
     price: Mapped[int]
-    created_at : Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     @hybrid_property
     def total_cost(self) -> int:

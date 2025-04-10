@@ -23,6 +23,7 @@ async def db_overrides():
     async with DBManager(async_session_maker_null_pool) as db:
         yield db
 
+
 app.dependency_overrides[getDB] = db_overrides
 
 
@@ -39,23 +40,22 @@ async def db():
 
 @pytest.fixture(scope="session")
 async def ac():
- async with AsyncClient(
+    async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-     yield ac
+    ) as ac:
+        yield ac
 
 
-@pytest.fixture(scope="session", autouse = True)
+@pytest.fixture(scope="session", autouse=True)
 async def setup_database(check_for_test):
-
     async with engine_null_pool.begin() as sesison:
         await sesison.run_sync(Base.metadata.drop_all)
         await sesison.run_sync(Base.metadata.create_all)
 
-    with open("tests/mock_hotels.json", "r",encoding="utf-8") as file:
+    with open("tests/mock_hotels.json", "r", encoding="utf-8") as file:
         hotels = [HotelAddPut.model_validate(hotel) for hotel in json.load(file)]
 
-    with open("tests/mock_rooms.json", "r",encoding="utf-8") as file:
+    with open("tests/mock_rooms.json", "r", encoding="utf-8") as file:
         rooms = [RoomAdd.model_validate(room) for room in json.load(file)]
 
     async with DBManager(async_session_maker_null_pool) as db:
@@ -67,31 +67,19 @@ async def setup_database(check_for_test):
 
 @pytest.fixture(scope="session", autouse=True)
 async def registrate_user(ac, setup_database):
-
     response = await ac.post(
-        "auth/register",
-        json= {
-            "email": "penisnostb@gmail.ru",
-            "password": "12345"
-        }
-        )
-    
+        "auth/register", json={"email": "penisnostb@gmail.ru", "password": "12345"}
+    )
+
     assert response.status_code == 200
 
 
 @pytest.fixture(scope="session", autouse=True)
 async def authenticated_ac(ac, registrate_user):
     await ac.post(
-        "/auth/login",
-        json = {
-            "email": "penisnostb@gmail.ru",
-            "password": "12345"
-        }
-        )
+        "/auth/login", json={"email": "penisnostb@gmail.ru", "password": "12345"}
+    )
 
     assert ac.cookies.get("access_token")
 
     yield ac
-
-
-    
