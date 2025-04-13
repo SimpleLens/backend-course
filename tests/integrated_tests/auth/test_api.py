@@ -11,17 +11,13 @@ import pytest
     ],
 )
 async def test_auth_e2e(email, password, status_code, ac):
-    response_register = await ac.post(
-        "/auth/register", json={"email": email, "password": password}
-    )
+    response_register = await ac.post("/auth/register", json={"email": email, "password": password})
 
     assert response_register.status_code == status_code
     if response_register.status_code != 200:
         return
 
-    response_login = await ac.post(
-        "/auth/login", json={"email": email, "password": password}
-    )
+    response_login = await ac.post("/auth/login", json={"email": email, "password": password})
 
     assert response_login.status_code == 200
     assert response_login.cookies["access_token"]

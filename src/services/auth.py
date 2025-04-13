@@ -11,13 +11,9 @@ class AuthService:
 
     def encode_jwt_token(self, data: dict):  # {user_id, email}
         to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.JWT_TOKEN_EXPIRE_MINUTES
-        )
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_TOKEN_EXPIRE_MINUTES)
         to_encode.update({"exp": expire})
-        return jwt.encode(
-            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
-        )
+        return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
     def decode_jwt_token(self, token) -> dict:
         try:

@@ -26,9 +26,7 @@ class HotelsRepository(BaseRepository):
     ):
         available_rooms = rooms_ids_to_get(date_to=date_to, date_from=date_from)
 
-        hotels_to_get = select(RoomsModel.hotel_id).filter(
-            RoomsModel.id.in_(available_rooms)
-        )
+        hotels_to_get = select(RoomsModel.hotel_id).filter(RoomsModel.id.in_(available_rooms))
         query_to_get_hotels = (
             select(HotelsModel)
             .select_from(HotelsModel)
@@ -49,8 +47,5 @@ class HotelsRepository(BaseRepository):
         result = await self.session.execute(query_to_get_hotels)
 
         if result:
-            return [
-                self.mapper.map_to_domen_entity(hotel)
-                for hotel in result.scalars().all()
-            ]
+            return [self.mapper.map_to_domen_entity(hotel) for hotel in result.scalars().all()]
         return None

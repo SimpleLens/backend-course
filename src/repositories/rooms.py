@@ -2,6 +2,7 @@ from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.exc import NoResultFound
 
 from src.schemas.rooms import Room, RoomWithFacilities
 from src.models.rooms import RoomsModel
@@ -10,6 +11,7 @@ from src.repositories.base import BaseRepository
 from src.database import engine
 from src.repositories.utils import rooms_ids_to_get
 from src.repositories.mappers.mappers import RoomDataMapper
+from src.exceptions import ObjectNotFoundException
 
 
 class RoomsRepository(BaseRepository):
@@ -22,9 +24,7 @@ class RoomsRepository(BaseRepository):
             .select_from(self.model)
             .filter(
                 RoomsModel.id.in_(
-                    rooms_ids_to_get(
-                        hotel_id=hotel_id, date_to=date_to, date_from=date_from
-                    )
+                    rooms_ids_to_get(hotel_id=hotel_id, date_to=date_to, date_from=date_from)
                 )
             )
             .options(selectinload(self.model.facilities))
@@ -32,20 +32,22 @@ class RoomsRepository(BaseRepository):
 
         result = await self.session.execute(query)
 
-        return [
-            RoomWithFacilities.model_validate(room) for room in result.scalars().all()
-        ]
+        return [RoomWithFacilities.model_validate(room) for room in result.scalars().all()]
 
-    async def get_one_or_none(self, room_id: int):
+    async def get_one_or_none(self, room_id: int, hotel_id: int):
         query = (
             select(self.model)
-            .filter(RoomsModel.id == room_id)
+            .filter(RoomsModel.id == room_id, RoomsModel.hotel_id == hotel_id)
             .options(selectinload(self.model.facilities))
         )
-
         result = await self.session.execute(query)
 
-        return RoomWithFacilities.model_validate(result.scalars().one_or_none())
+        data = result.scalars().one_or_none()
+         
+        if not data:
+            return None
+        
+        return RoomWithFacilities.model_validate(data)
 
     # async def get_filtered_by_data( ### Мое решение задачи с выводом удобств номеров с использованием одного sql запроса (считаю что очень хорошо справился с заданием)
     #         self,

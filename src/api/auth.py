@@ -4,9 +4,7 @@ from src.schemas.users import UserAddForRequest, UserAdd, UserLoginForRequest
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep, DbDep
 
-router = APIRouter(
-    prefix="/auth", tags=["Аутентификация, аутентификация и регистрация"]
-)
+router = APIRouter(prefix="/auth", tags=["Аутентификация, аутентификация и регистрация"])
 
 
 @router.post("/register")
@@ -16,10 +14,14 @@ async def registration_user(Db: DbDep, user_data: UserAddForRequest):
         hashed_password=hashed_passsword, **user_data.model_dump(exclude="password")
     )
 
-    try:
-        added_user = await Db.users.add(user_data_to_register)
-    except:
-        raise HTTPException(400)
+    check_for_email = await Db.users.get_one_or_none(email = user_data.email)
+    check_for_username = await Db.users.get_one_or_none(username = user_data.username)
+
+    if check_for_email or check_for_username:
+        raise HTTPException(409, detail="Пользователь существует")
+
+    added_user = await Db.users.add(user_data_to_register)
+
     await Db.commit()
 
     return {"status": "OK", "user": added_user}
@@ -35,9 +37,7 @@ async def login(Db: DbDep, user_data: UserLoginForRequest, response: Response):
     if not AuthService().verify_password(user_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Неверный пароль")
 
-    access_token = AuthService().encode_jwt_token(
-        {"user_id": user.id, "email": user.email}
-    )
+    access_token = AuthService().encode_jwt_token({"user_id": user.id, "email": user.email})
 
     response.set_cookie("access_token", access_token)
 

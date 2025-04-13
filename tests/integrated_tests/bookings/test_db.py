@@ -27,9 +27,7 @@ async def test_bookings_crud(db):
 
     await db.bookings.add(booking)
 
-    added_booking = await db.bookings.get_one_or_none(
-        date_from=date_from, date_to=date_to
-    )
+    added_booking = await db.bookings.get_one_or_none(date_from=date_from, date_to=date_to)
 
     assert added_booking
 

@@ -1,9 +1,11 @@
 from sqlalchemy import select, insert, delete
+from sqlalchemy.exc import NoResultFound
 
 from src.repositories.base import BaseRepository
 from src.schemas.facilities import Facility, RoomFacility
 from src.models.facilities import FacilitiesModel, RoomsFacilitiesModel
 from src.repositories.mappers.mappers import FacilityDataMapper, RoomFacilityDataMapper
+from src.exceptions import ObjectNotFoundException
 
 
 class FacilitiesRepository(BaseRepository):
@@ -16,11 +18,9 @@ class RoomsFacilitiesRepository(BaseRepository):
     schema = RoomFacilityDataMapper
 
     async def set_facilities(self, room_id: int, facilities_ids: list[int]):
-        current_facilities_query = select(self.model.facility_id).filter_by(
-            room_id=room_id
-        )
-
+        current_facilities_query = select(self.model.facility_id).filter_by(room_id=room_id)
         current_facilities_result = await self.session.execute(current_facilities_query)
+
         current_facilities = current_facilities_result.scalars().all()
 
         facilities_to_delete = list(set(current_facilities) - set(facilities_ids))
