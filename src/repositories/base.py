@@ -1,10 +1,13 @@
+import logging
+
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import NoResultFound, IntegrityError
+from asyncpg.exceptions import UniqueViolationError
 from pydantic import BaseModel
 from fastapi import HTTPException
 
 from src.repositories.mappers.mappers import DataMapper
-from src.exceptions import ObjectNotFoundException
+from src.exceptions import ObjectNotFoundException, ObjectAlreadyExists
 
 
 class BaseRepository:
@@ -65,8 +68,15 @@ class BaseRepository:
     async def add(self, data: BaseModel):
         stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         
-        returned_result = await self.session.execute(stmt)
-
+        try:
+            returned_result = await self.session.execute(stmt)
+        except Exception as ex:
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                logging.error(f"Не удалось записать данные в базу, ошибка: {ex.orig.__cause__}")
+                raise ObjectAlreadyExists from ex   
+            else:
+                logging.error(f"Не удалось записать данные в базу, необработанная ошибка: {ex.orig.__cause__}")
+                raise ex
         
         return self.mapper.map_to_domen_entity(returned_result.scalars().one())
 

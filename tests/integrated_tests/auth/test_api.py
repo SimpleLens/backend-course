@@ -6,7 +6,7 @@ import pytest
     [
         ("kaki_puki@mail.ru", "1234vfds5", 200),
         ("kaki_12puki@mail.ru", "12341vfds5", 200),
-        ("kaki_12puki@mail.ru", "12341vfds5", 400),
+        ("kaki_12puki@mail.ru", "12341vfds5", 409),
         ("kaki_12puki@mail", "12341vfds5", 422),
     ],
 )
@@ -35,3 +35,5 @@ async def test_auth_e2e(email, password, status_code, ac):
     response_me = await ac.get("auth/me")
 
     assert response_me.status_code == 401
+
+    await ac.post("/auth/login", json={"email": email, "password": password})
